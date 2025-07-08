@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { clearOfflineData, getOfflineData, saveOfflineData } from './config/db'
 
 
 const App = () => {
 
-  const url ="https://offline-first-app-api.onrender.com"
+  const url = import.meta.env.VITE_URL
 
   const[form ,setform] = useState({
     name:'',email:'',password:''
@@ -34,21 +34,32 @@ const App = () => {
     }
   }
 
-  const syncData = async ()=>{
+
+  const syncData = useCallback(async () => {
     const users = await getOfflineData();
-
-    for(let data of users){
-      await axios.post(`${url}/api/users`,data)
+    if (users && users.length > 0) {
+      for (let data of users) {
+        await axios.post(`${url}/api/users`, data);
+      }
+      await clearOfflineData();
+      alert("Offline data are stored in the database");
     }
+  }, [url]);
 
-    await clearOfflineData()
-    alert("offline data are stored at Database")
-  }
 
-  useEffect(()=>{
-    window.addEventListener('online', syncData)
-    return ()=> window.removeEventListener('online',syncData)
-  })
+  useEffect(() => {
+    window.addEventListener('online', syncData);
+    // On mount, if online and there is offline data, sync immediately
+    (async () => {
+      if (navigator.onLine) {
+        const users = await getOfflineData();
+        if (users && users.length > 0) {
+          await syncData();
+        }
+      } 
+    })();
+    return () => window.removeEventListener('online', syncData);
+  }, [syncData]);
 
 
 
