@@ -1,6 +1,9 @@
 const CACHE_NAME = 'offline-cache-v1';
 const OFFLINE_URLS = [
+  '/index.html',
   '/service-worker.js',
+  '/assets/index-B9Vvf2nf.js',
+  '/assets/index-DFYonil9.css',
 ];
 
 self.addEventListener('install', event => {
